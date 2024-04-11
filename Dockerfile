@@ -1,6 +1,6 @@
 # Specify the base image for the environment
 # FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
-FROM nvidia/cuda:11.4.0-devel-ubuntu20.04
+FROM pytorch/pytorch:1.1.0-cuda10.0-cudnn7.5-devel
 
 # Authors of the image
 LABEL authors="jjohnson78@bwh.harvard.edu"
@@ -24,16 +24,21 @@ RUN apt update && apt install -y --no-install-recommends \
   git \
   && rm -rf /var/lib/apt/lists/*
 
-# Extra steps for installing Python 3.7
-RUN apt update && apt install -y --no-install-recommends \
-  build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev wget libbz2-dev
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt update
-RUN apt install -y python3.7-dev
-RUN apt install -y python3-pip
-RUN python3.7 -m pip install distutils
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget && \
+    rm -rf /var/lib/apt/lists/*
 
+# Download and install Python 3.7.4
+RUN wget https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz && \
+    tar xzf Python-3.7.4.tgz && \
+    cd Python-3.7.4 && \
+    ./configure && \
+    make && \
+    make install
+
+# Cleanup
+RUN rm -rf /Python-3.7.4 /Python-3.7.4.tgz
 
 # Create a working directory and set it as the working directory
 # Also create directories for input and output data (mounting points) in the same RUN to avoid creating intermediate layers
